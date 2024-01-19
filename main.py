@@ -11,10 +11,15 @@ class MyApp:
         # App settings
         self.master = master
         self.master.title("Work with PDF")
-        self.master.geometry("800x600")
+        self.master.geometry("1200x800")
+        self.master.resizable(False, False)
 
         # Bind
         self.master.bind("<Escape>", self.confirm_exit)
+
+        # Fonts
+        self.main_font = ("Cascadia Code SemiBold", 24, "bold")
+        self.list_font = ("Cascadia Code SemiBold", 16, "bold")
 
         # Place Frame
         self.main_menu_view()
@@ -29,13 +34,16 @@ class MyApp:
         self.main_menu_frame = ctk.CTkFrame(master=self.master)
 
         # Create Widgets
-        merge_button = ctk.CTkButton(master=self.main_menu_frame,
-                                     text="Połącz pliki PDF",
-                                     command=lambda: self.change_frame(old_frame=self.main_menu_frame,
-                                                                       new_frame=self.pdf_merge_view))
+        self.merge_button = ctk.CTkButton(master=self.main_menu_frame,
+                                          text="Połącz pliki PDF",
+                                          command=lambda: self.change_frame(old_frame=self.main_menu_frame,
+                                                                            new_frame=self.pdf_merge_view))
+
+        # Configure Widgets
+        self.merge_button.configure(font=self.main_font)
 
         # Place Widgets
-        merge_button.pack()
+        self.merge_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER, relwidth=0.4, relheight=0.1)
 
         # Place Frame
         self.main_menu_frame.pack(fill="both", expand=True)
@@ -49,6 +57,9 @@ class MyApp:
     def pdf_merge_view(self):
         # Variables
         self.pdf_files = []
+        self.drag_data = {"x": 0,
+                          "y": 0,
+                          "selected_index": None}
 
         # Create Frame
         self.pdf_merge_frame = ctk.CTkFrame(master=self.main_menu_frame)
@@ -60,16 +71,28 @@ class MyApp:
         self.pdf_remove_button = ctk.CTkButton(master=self.pdf_merge_frame,
                                                text="Usuń plik PDF",
                                                command=self.pdf_remove_func)
-        self.pdf_listbox = tk.Listbox(master=self.pdf_merge_frame)
+        self.pdf_listbox = tk.Listbox(master=self.pdf_merge_frame,
+                                      selectmode=tk.SINGLE,
+                                      exportselection=False,
+                                      height=10)
         self.pdf_merge_button = ctk.CTkButton(master=self.pdf_merge_frame,
                                               text="Połącz pliki PDF",
                                               command=self.pdf_merge_func)
 
+        # Configure Widgets
+        for widget in self.pdf_merge_frame.winfo_children():
+            widget.configure(font=self.main_font)
+        self.pdf_listbox.configure(font=self.list_font)
+
+        # Bind
+        self.pdf_listbox.bind("<B1-Motion>", self.on_drag_motion)
+        self.pdf_listbox.bind("<ButtonRelease-1>", self.on_drag_release)
+
         # Place Widgets
-        self.pdf_add_button.place(relx=0.25, rely=0.1, anchor=ctk.CENTER, relwidth=0.2, relheight=0.1)
-        self.pdf_remove_button.place(relx=0.75, rely=0.1, anchor=ctk.CENTER, relwidth=0.2, relheight=0.1)
-        self.pdf_listbox.place(relx=0.5, rely=0.2, anchor=ctk.N, relwidth=0.7, relheight=0.6)
-        self.pdf_merge_button.place(relx=0.5, rely=0.9, anchor=ctk.CENTER, relwidth=0.2, relheight=0.1)
+        self.pdf_add_button.place(relx=0.1, rely=0.05, anchor=ctk.NW, relwidth=0.375, relheight=0.1)
+        self.pdf_remove_button.place(relx=0.9, rely=0.05, anchor=ctk.NE, relwidth=0.375, relheight=0.1)
+        self.pdf_listbox.place(relx=0.5, rely=0.2, anchor=ctk.N, relwidth=0.8, relheight=0.6)
+        self.pdf_merge_button.place(relx=0.5, rely=0.9, anchor=ctk.CENTER, relwidth=0.8, relheight=0.1)
 
         # Place Frame
         self.pdf_merge_frame.pack(fill="both", expand=True)
@@ -77,13 +100,35 @@ class MyApp:
         # Update PDF files
         self.update_pdf_listbox()
 
+    def on_drag_motion(self, event):
+        x, y = event.x, event.y
+        index = self.pdf_listbox.nearest(y)
+        if index is not None:
+            self.pdf_listbox.selection_clear(0, tk.END)
+            self.pdf_listbox.selection_set(index)
+            self.drag_data["selected_index"] = index
+            self.drag_data["x"] = x
+            self.drag_data["y"] = y
+
+    def on_drag_release(self, event):
+        selected_index = self.drag_data["selected_index"]
+
+        if selected_index is not None:
+            new_index = self.pdf_listbox.nearest(event.y)
+            if new_index != selected_index:
+                moved_data = self.pdf_files.pop(selected_index)
+                self.pdf_files.insert(new_index, moved_data)
+                self.update_pdf_listbox()
+
     def update_pdf_listbox(self):
         self.pdf_listbox.delete(0, tk.END)
-        i = 1
+        i = 0
         for pdf_file in self.pdf_files:
             file_name = os.path.basename(pdf_file)
             file_name = f"{i}. {file_name}"
             self.pdf_listbox.insert(tk.END, file_name)
+            background_color = "#f2f2f2" if i % 2 else "#d4d4d4"
+            self.pdf_listbox.itemconfig(i, {"bg": background_color})
             i += 1
 
     def pdf_add_func(self):
