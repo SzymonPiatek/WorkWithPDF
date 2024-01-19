@@ -146,7 +146,16 @@ class MyApp:
             print(pdf)
             merger.append(pdf)
 
-        merger.write("output.pdf")
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("Pliki PDF", "*.pdf")],
+            title="Zapisz plik PDF"
+        )
+
+        if not file_path.endswith(".pdf"):
+            file_path += ".pdf"
+
+        merger.write(file_path)
         merger.close()
 
     def pdf_remove_func(self):
