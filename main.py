@@ -74,7 +74,10 @@ class MyApp:
         self.pdf_listbox = tk.Listbox(master=self.pdf_merge_frame,
                                       selectmode=tk.SINGLE,
                                       exportselection=False,
-                                      height=10)
+                                      height=10,
+                                      relief="sunken",
+                                      selectbackground="#6694de",
+                                      takefocus=True)
         self.pdf_merge_button = ctk.CTkButton(master=self.pdf_merge_frame,
                                               text="Połącz pliki PDF",
                                               command=self.pdf_merge_func)
