@@ -81,21 +81,26 @@ class MyApp:
         self.pdf_merge_button = ctk.CTkButton(master=self.pdf_merge_frame,
                                               text="Połącz pliki PDF",
                                               command=self.pdf_merge_func)
+        self.pdf_up_button = ctk.CTkButton(master=self.pdf_merge_frame,
+                                           text="▲",
+                                           command=self.move_selected_pdf_up)
+        self.pdf_down_button = ctk.CTkButton(master=self.pdf_merge_frame,
+                                             text="▼",
+                                             command=self.move_selected_pdf_down)
 
         # Configure Widgets
         for widget in self.pdf_merge_frame.winfo_children():
             widget.configure(font=self.main_font)
         self.pdf_listbox.configure(font=self.list_font)
 
-        # Bind
-        self.pdf_listbox.bind("<B1-Motion>", self.on_drag_motion)
-        self.pdf_listbox.bind("<ButtonRelease-1>", self.on_drag_release)
-
         # Place Widgets
         self.pdf_add_button.place(relx=0.1, rely=0.05, anchor=ctk.NW, relwidth=0.375, relheight=0.1)
         self.pdf_remove_button.place(relx=0.9, rely=0.05, anchor=ctk.NE, relwidth=0.375, relheight=0.1)
         self.pdf_listbox.place(relx=0.5, rely=0.2, anchor=ctk.N, relwidth=0.8, relheight=0.6)
-        self.pdf_merge_button.place(relx=0.5, rely=0.9, anchor=ctk.CENTER, relwidth=0.8, relheight=0.1)
+        self.pdf_merge_button.place(relx=0.1, rely=0.85, anchor=ctk.NW, relwidth=0.56, relheight=0.1)
+
+        self.pdf_up_button.place(relx=0.9, rely=0.85, anchor=ctk.NE, relwidth=0.1, relheight=0.1)
+        self.pdf_down_button.place(relx=0.78, rely=0.85, anchor=ctk.NE, relwidth=0.1, relheight=0.1)
 
         # Place Frame
         self.pdf_merge_frame.pack(fill="both", expand=True)
@@ -103,25 +108,23 @@ class MyApp:
         # Update PDF files
         self.update_pdf_listbox()
 
-    def on_drag_motion(self, event):
-        x, y = event.x, event.y
-        index = self.pdf_listbox.nearest(y)
-        if index is not None:
-            self.pdf_listbox.selection_clear(0, tk.END)
-            self.pdf_listbox.selection_set(index)
-            self.drag_data["selected_index"] = index
-            self.drag_data["x"] = x
-            self.drag_data["y"] = y
+    def move_selected_pdf_up(self):
+        selected_index = self.pdf_listbox.curselection()
+        if selected_index and selected_index[0] > 0:
+            self.pdf_files[selected_index[0]], self.pdf_files[selected_index[0] - 1] = (
+                self.pdf_files[selected_index[0] - 1],
+                self.pdf_files[selected_index[0]]
+            )
+            self.update_pdf_listbox()
 
-    def on_drag_release(self, event):
-        selected_index = self.drag_data["selected_index"]
-
-        if selected_index is not None:
-            new_index = self.pdf_listbox.nearest(event.y)
-            if new_index != selected_index:
-                moved_data = self.pdf_files.pop(selected_index)
-                self.pdf_files.insert(new_index, moved_data)
-                self.update_pdf_listbox()
+    def move_selected_pdf_down(self):
+        selected_index = self.pdf_listbox.curselection()
+        if selected_index and selected_index[0] < len(self.pdf_files) - 1:
+            self.pdf_files[selected_index[0]], self.pdf_files[selected_index[0] + 1] = (
+                self.pdf_files[selected_index[0] + 1],
+                self.pdf_files[selected_index[0]]
+            )
+            self.update_pdf_listbox()
 
     def update_pdf_listbox(self):
         self.pdf_listbox.delete(0, tk.END)
