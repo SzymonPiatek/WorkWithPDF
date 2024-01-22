@@ -14,6 +14,12 @@ class MyApp:
         self.master.geometry("1200x800")
         self.master.resizable(False, False)
 
+        # Colors
+        self.button_color = "#6e8237"
+        self.background_color = "#404040"
+        self.listbox_color = "#636363"
+        self.master.configure(fg_color=self.background_color)
+
         # Bind
         self.master.bind("<Escape>", self.confirm_exit)
 
@@ -31,7 +37,8 @@ class MyApp:
 
     def main_menu_view(self):
         # Create Frame
-        self.main_menu_frame = ctk.CTkFrame(master=self.master)
+        self.main_menu_frame = ctk.CTkFrame(master=self.master,
+                                            fg_color="transparent")
 
         # Create Widgets
         self.merge_button = ctk.CTkButton(master=self.main_menu_frame,
@@ -40,7 +47,8 @@ class MyApp:
                                                                             new_frame=self.pdf_merge_view))
 
         # Configure Widgets
-        self.merge_button.configure(font=self.main_font)
+        self.merge_button.configure(font=self.main_font,
+                                    fg_color=self.button_color)
 
         # Place Widgets
         self.merge_button.place(relx=0.5, rely=0.5, anchor=ctk.CENTER, relwidth=0.4, relheight=0.1)
@@ -93,6 +101,12 @@ class MyApp:
             widget.configure(font=self.main_font)
         self.pdf_listbox.configure(font=self.list_font)
 
+        button_list = [self.pdf_add_button, self.pdf_remove_button, self.pdf_merge_button,
+                       self.pdf_up_button, self.pdf_down_button]
+
+        for button in button_list:
+            button.configure(fg_color=self.button_color)
+
         # Place Widgets
         self.pdf_add_button.place(relx=0.1, rely=0.05, anchor=ctk.NW, relwidth=0.375, relheight=0.1)
         self.pdf_remove_button.place(relx=0.9, rely=0.05, anchor=ctk.NE, relwidth=0.375, relheight=0.1)
@@ -116,6 +130,7 @@ class MyApp:
                 self.pdf_files[selected_index[0]]
             )
             self.update_pdf_listbox()
+            self.pdf_listbox.selection_set(selected_index[0] - 1)
 
     def move_selected_pdf_down(self):
         selected_index = self.pdf_listbox.curselection()
@@ -125,6 +140,7 @@ class MyApp:
                 self.pdf_files[selected_index[0]]
             )
             self.update_pdf_listbox()
+            self.pdf_listbox.selection_set(selected_index[0] + 1)
 
     def update_pdf_listbox(self):
         self.pdf_listbox.delete(0, tk.END)
